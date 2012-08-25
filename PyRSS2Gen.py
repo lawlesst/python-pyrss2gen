@@ -9,7 +9,7 @@ _generator_name = __name__ + "-" + ".".join(map(str, __version__))
 import datetime
 
 # Could make this the base class; will need to add 'publish'
-class WriteXmlMixin:
+class WriteXmlMixin(object):
     def write_xml(self, outfile, encoding = "iso-8859-1"):
         from xml.sax import saxutils
         handler = saxutils.XMLGenerator(outfile, encoding)
