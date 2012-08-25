@@ -256,7 +256,8 @@ class RSS2(WriteXmlMixin):
     ".categories" and the RSS items under ".items".
     """
     
-    rss_attrs = {"version": "2.0"}
+    rss_attrs = {"version": "2.0",
+                 "xmlns:content", "http://purl.org/rss/1.0/modules/content/"}
     element_attrs = {}
     def __init__(self,
                  title,
