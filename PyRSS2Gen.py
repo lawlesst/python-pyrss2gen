@@ -257,7 +257,7 @@ class RSS2(WriteXmlMixin):
     """
     
     rss_attrs = {"version": "2.0",
-                 "xmlns:content", "http://purl.org/rss/1.0/modules/content/"}
+                 "xmlns:content": "http://purl.org/rss/1.0/modules/content/"}
     element_attrs = {}
     def __init__(self,
                  title,
