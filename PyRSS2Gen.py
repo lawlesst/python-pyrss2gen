@@ -8,11 +8,20 @@ _generator_name = __name__ + "-" + ".".join(map(str, __version__))
 
 import datetime
 
+from xml.sax.saxutils import XMLGenerator, escape
+
+class ThisGenerator(XMLGenerator):
+    def characters(self, content, **kwargs):
+        if kwargs.get('skip', False) == True:
+            self._write(content)
+        else:
+            self._write(escape(content))
+
 # Could make this the base class; will need to add 'publish'
 class WriteXmlMixin(object):
     def write_xml(self, outfile, encoding = "iso-8859-1"):
         from xml.sax import saxutils
-        handler = saxutils.XMLGenerator(outfile, encoding)
+        handler = ThisGenerator(outfile, encoding)
         handler.startDocument()
         self.publish(handler)
         handler.endDocument()
@@ -33,7 +42,10 @@ def _element(handler, name, obj, d = {}):
         # to use for the common case.
         handler.startElement(name, d)
         if obj is not None:
-            handler.characters(obj)
+            if d.get('escape', True) == False:
+                handler.characters(obj, skip=True)
+            else:
+                handler.characters(obj)
         handler.endElement(name)
     else:
         # It better know how to emit the correct XML.
