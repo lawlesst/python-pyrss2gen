@@ -4,7 +4,7 @@ __name__ = "PyRSS2Gen"
 __version__ = (1, 0, 0)
 __author__ = "Andrew Dalke <dalke@dalkescientific.com>"
 
-_generator_name = __name__ + "-" + ".".join(map(str, __version__))
+_generator_name = unicode(__name__ + "-" + ".".join(map(str, __version__)))
 
 import datetime
 
@@ -19,14 +19,14 @@ class ThisGenerator(XMLGenerator):
 
 # Could make this the base class; will need to add 'publish'
 class WriteXmlMixin(object):
-    def write_xml(self, outfile, encoding = "iso-8859-1"):
+    def write_xml(self, outfile, encoding = "utf-8"):
         from xml.sax import saxutils
         handler = ThisGenerator(outfile, encoding)
         handler.startDocument()
         self.publish(handler)
         handler.endDocument()
 
-    def to_xml(self, encoding = "iso-8859-1"):
+    def to_xml(self, encoding = "utf-8"):
         try:
             import cStringIO as StringIO
         except ImportError:
@@ -69,14 +69,14 @@ def _format_date(dt):
     # Isn't there a standard way to do this for Python?  The
     # rfc822 and email.Utils modules assume a timestamp.  The
     # following is based on the rfc822 module.
-    return "%s, %02d %s %04d %02d:%02d:%02d GMT" % (
+    return u"%s, %02d %s %04d %02d:%02d:%02d GMT" % (
             ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"][dt.weekday()],
             dt.day,
             ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
              "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"][dt.month-1],
             dt.year, dt.hour, dt.minute, dt.second)
 
-        
+
 ##
 # A couple simple wrapper objects for the fields which
 # take a simple value other than a string.
@@ -84,7 +84,7 @@ class IntElement:
     """implements the 'publish' API for integers
 
     Takes the tag name and the integer value to publish.
-    
+
     (Could be used for anything which uses str() to be published
     to text for XML.)
     """
@@ -94,7 +94,7 @@ class IntElement:
         self.val = val
     def publish(self, handler):
         handler.startElement(self.name, self.element_attrs)
-        handler.characters(str(self.val))
+        handler.characters(unicode(self.val))
         handler.endElement(self.name)
 
 class DateElement:
@@ -150,7 +150,7 @@ class Image:
         self.width = width
         self.height = height
         self.description = description
-        
+
     def publish(self, handler):
         handler.startElement("image", self.element_attrs)
 
@@ -162,7 +162,7 @@ class Image:
         if isinstance(width, int):
             width = IntElement("width", width)
         _opt_element(handler, "width", width)
-        
+
         height = self.height
         if isinstance(height, int):
             height = IntElement("height", height)
@@ -208,7 +208,7 @@ class TextInput:
         _element(handler, "name", self.name)
         _element(handler, "link", self.link)
         handler.endElement("textInput")
-        
+
 
 class Enclosure:
     """Publish an enclosure"""
@@ -267,7 +267,7 @@ class RSS2(WriteXmlMixin):
     Stores the channel attributes, with the "category" elements under
     ".categories" and the RSS items under ".items".
     """
-    
+
     rss_attrs = {"version": "2.0",
                  "xmlns:content": "http://purl.org/rss/1.0/modules/content/"}
     element_attrs = {}
@@ -282,7 +282,7 @@ class RSS2(WriteXmlMixin):
                  webMaster = None,
                  pubDate = None,  # a datetime, *in* *GMT*
                  lastBuildDate = None, # a datetime
-                 
+
                  categories = None, # list of strings or Category
                  generator = _generator_name,
                  docs = "http://blogs.law.harvard.edu/tech/rss",
@@ -297,8 +297,8 @@ class RSS2(WriteXmlMixin):
 
                  items = None,     # list of RSSItems
                  ):
-        self.title = title
-        self.link = link
+        self.title = unicode(title)
+        self.link = unicode(link)
         self.description = description
         self.language = language
         self.copyright = copyright
@@ -307,12 +307,12 @@ class RSS2(WriteXmlMixin):
         self.webMaster = webMaster
         self.pubDate = pubDate
         self.lastBuildDate = lastBuildDate
-        
+
         if categories is None:
             categories = []
         self.categories = categories
         self.generator = generator
-        self.docs = docs
+        self.docs = unicode(docs)
         self.cloud = cloud
         self.ttl = ttl
         self.image = image
@@ -333,7 +333,7 @@ class RSS2(WriteXmlMixin):
         _element(handler, "description", self.description)
 
         self.publish_extensions(handler)
-        
+
         _opt_element(handler, "language", self.language)
         _opt_element(handler, "copyright", self.copyright)
         _opt_element(handler, "managingEditor", self.managingEditor)
@@ -387,8 +387,8 @@ class RSS2(WriteXmlMixin):
         # output after the three required fields.
         pass
 
-    
-    
+
+
 class RSSItem(WriteXmlMixin):
     """Publish an RSS Item"""
     element_attrs = {}
@@ -404,20 +404,20 @@ class RSSItem(WriteXmlMixin):
                  pubDate = None, # a datetime
                  source = None,  # a Source
                  ):
-        
+
         if title is None and description is None:
             raise TypeError(
                 "must define at least one of 'title' or 'description'")
-        self.title = title
-        self.link = link
-        self.description = description
+        self.title = unicode(title)
+        self.link = unicode(link)
+        self.description = unicode(description)
         self.author = author
         if categories is None:
             categories = []
         self.categories = categories
         self.comments = comments
         self.enclosure = enclosure
-        self.guid = guid
+        self.guid = unicode(guid)
         self.pubDate = pubDate
         self.source = source
         # It sure does get tedious typing these names three times...
@@ -434,7 +434,7 @@ class RSSItem(WriteXmlMixin):
             if isinstance(category, basestring):
                 category = Category(category)
             category.publish(handler)
-        
+
         _opt_element(handler, "comments", self.comments)
         if self.enclosure is not None:
             self.enclosure.publish(handler)
@@ -447,7 +447,7 @@ class RSSItem(WriteXmlMixin):
 
         if self.source is not None:
             self.source.publish(handler)
-        
+
         handler.endElement("item")
 
     def publish_extensions(self, handler):
